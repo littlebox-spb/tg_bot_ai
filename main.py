@@ -2,6 +2,7 @@ import logging
 
 from config import TG_BOT_KEY
 from handlers.random import fact
+from handlers.translate import translate
 from telebot import TeleBot, types
 
 bot = TeleBot(TG_BOT_KEY)
@@ -71,6 +72,9 @@ def actions(message):
         bot.send_message(message.chat.id, text="Хорошо, давай начнем викторину!")
     elif message.text == "📖 Переводчик":
         logger.info("Перевочик успешно запущен")
+        if Mode != 5:
+            with open("picturies/translate.jpg", "rb") as img:
+                bot.send_photo(chat_id=message.chat.id, photo=img)
         Mode = 5
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         btn1 = types.KeyboardButton("Английский")
@@ -104,8 +108,14 @@ def actions(message):
             text="Вы вернулись в главное меню",
             reply_markup=main_menu(),
         )
+    if Mode in (51, 52, 53, 54):
+        bot.send_message(message.chat.id, text=translate(Mode, message))
     match Mode:
         case 1:
+            bot.send_message(
+                message.chat.id,
+                text="Я ищу интересный факт...",
+            )
             bot.send_message(message.chat.id, text=fact())
         case 2:
             bot.send_message(message.chat.id, text=f"ask({message.text})")
@@ -114,7 +124,24 @@ def actions(message):
         case 4:
             bot.send_message(message.chat.id, text="quiz(message.text)")
         case 5:
-            bot.send_message(message.chat.id, text="translate(message.text)")
+            match message.text:
+                case "Английский":
+                    logger.info("Выбран английский язык")
+                    Mode = 51
+                case "Французский":
+                    logger.info("Выбран французский язык")
+                    Mode = 52
+                case "Китайский":
+                    logger.info("Выбран китайский язык")
+                    Mode = 53
+                case "Арабский":
+                    logger.info("Выбран арабский язык")
+                    Mode = 54
+            if Mode in (51, 52, 53, 54):
+                bot.send_message(
+                    message.chat.id,
+                    text="Введи текст, который нужно перевести. Для смены языка нажми 'Главное меню'.",
+                )
         case 6:
             bot.send_message(message.chat.id, text="learn(message.text)")
         case 0:
