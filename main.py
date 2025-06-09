@@ -1,6 +1,7 @@
 import logging
 
 from config import TG_BOT_KEY
+from handlers.random import fact
 from telebot import TeleBot, types
 
 bot = TeleBot(TG_BOT_KEY)
@@ -30,9 +31,7 @@ def main_menu():
 def start(message):
     bot.send_message(
         message.chat.id,
-        text="Привет! Я бот и я могу развлечь тебя. Выбери, что ты хочешь.".format(
-            message.from_user
-        ),
+        text="Привет! Я бот и я могу развлечь тебя. Выбери, что ты хочешь.",
         reply_markup=main_menu(),
     )
     logger.info("Бот запущен")
@@ -43,10 +42,14 @@ def actions(message):
     global Mode
     if message.text == "🌍 Случайный факт":
         logger.info("Случайный факт успешно запущен")
+        if Mode != 1:
+            bot.send_message(
+                message.chat.id,
+                text="Хорошо, я сейчас подыщу тебе, что-нибудь интересное!",
+            )
+            with open("picturies/random.jpg", "rb") as img:
+                bot.send_photo(chat_id=message.chat.id, photo=img)
         Mode = 1
-        bot.send_message(
-            message.chat.id, text="Хорошо, я сейчас подыщу тебе, что-нибудь интересное!"
-        )
     elif message.text == "❓ Задать вопрос чату GPT":
         logger.info("Режим работы с GPT успешно запущен")
         Mode = 2
@@ -101,22 +104,21 @@ def actions(message):
             text="Вы вернулись в главное меню",
             reply_markup=main_menu(),
         )
-    else:
-        match Mode:
-            case 1:
-                bot.send_message(message.chat.id, text="fact()")
-            case 2:
-                bot.send_message(message.chat.id, text=f"ask({message.text})")
-            case 3:
-                bot.send_message(message.chat.id, text=f"dialog({message.text})")
-            case 4:
-                bot.send_message(message.chat.id, text="quiz(message.text)")
-            case 5:
-                bot.send_message(message.chat.id, text="translate(message.text)")
-            case 6:
-                bot.send_message(message.chat.id, text="learn(message.text)")
-            case 0:
-                bot.send_message(message.chat.id, text="Выбери, что ты хочешь.")
+    match Mode:
+        case 1:
+            bot.send_message(message.chat.id, text=fact())
+        case 2:
+            bot.send_message(message.chat.id, text=f"ask({message.text})")
+        case 3:
+            bot.send_message(message.chat.id, text=f"dialog({message.text})")
+        case 4:
+            bot.send_message(message.chat.id, text="quiz(message.text)")
+        case 5:
+            bot.send_message(message.chat.id, text="translate(message.text)")
+        case 6:
+            bot.send_message(message.chat.id, text="learn(message.text)")
+        case 0:
+            bot.send_message(message.chat.id, text="Выбери, что ты хочешь.")
 
 
 def main():
