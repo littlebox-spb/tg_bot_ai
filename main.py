@@ -1,6 +1,7 @@
 import logging
 
 from config import TG_BOT_KEY
+from handlers.ask import ask
 from handlers.random import fact
 from handlers.translate import translate
 from telebot import TeleBot, types
@@ -53,8 +54,9 @@ def actions(message):
         Mode = 1
     elif message.text == "❓ Задать вопрос чату GPT":
         logger.info("Режим работы с GPT успешно запущен")
+        with open("picturies/gpt.jpg", "rb") as img:
+            bot.send_photo(chat_id=message.chat.id, photo=img)
         Mode = 2
-        bot.send_message(message.chat.id, text="Я тебя слушаю, спрашивай!")
     elif message.text == "✨ Поговорить со звездой":
         logger.info("Разговор со звездой успешно запущен")
         Mode = 3
@@ -118,7 +120,7 @@ def actions(message):
             )
             bot.send_message(message.chat.id, text=fact())
         case 2:
-            bot.send_message(message.chat.id, text=f"ask({message.text})")
+            bot.send_message(message.chat.id, text=ask(message.text))
         case 3:
             bot.send_message(message.chat.id, text=f"dialog({message.text})")
         case 4:
