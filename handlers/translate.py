@@ -7,11 +7,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# bot.register_next_step_handler(message, process_name)
-
 
 def translate(Mode, message):
-    print(Mode)
     logger.info("Переводчик GPT успешно запущен")
     language = ["английский", "французский", "китайский", "арабский"]
     request = [
