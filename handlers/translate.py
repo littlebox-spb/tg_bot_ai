@@ -15,7 +15,7 @@ def translate(Mode, message):
         {"role": "system", "content": "Ты переводчик - полиглот."},
         {
             "role": "user",
-            "content": f'Переведи "{message.text}" на {language[Mode - 51]} язык.',
+            "content": f'Переведи "{message}" на {language[Mode - 51]} язык.',
         },
     ]
     logger.info("Запрос успешно сформирован")

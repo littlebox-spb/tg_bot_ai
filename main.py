@@ -5,6 +5,7 @@ from handlers.ask import ask
 from handlers.random import fact
 from handlers.star import dialog, startDialog
 from handlers.translate import translate
+from handlers.trenager import getWorld, question, statistics, testWords
 from telebot import TeleBot, types
 
 bot = TeleBot(TG_BOT_KEY)
@@ -98,6 +99,9 @@ def actions(message):
         )
     elif message.text == "📑 Словарный тренажёр английского языка":
         logger.info("Словарный тренажёр успешно запущен")
+        if Mode != 6:
+            with open("picturies/trenager.jpg", "rb") as img:
+                bot.send_photo(chat_id=message.chat.id, photo=img)
         Mode = 6
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         btn1 = types.KeyboardButton("Ещё слово")
@@ -106,7 +110,11 @@ def actions(message):
         markup.add(btn1, btn2, back)
         bot.send_message(
             message.chat.id,
-            text="Тут должно быть слово, которое нужно перевести.",
+            text="Я подыскиваю для тебя интересное слово...",
+        )
+        bot.send_message(
+            message.chat.id,
+            text=getWorld(),
             reply_markup=markup,
         )
     elif message.text == "Главное меню" or message.text == "Закончить":
@@ -116,20 +124,29 @@ def actions(message):
             text="Вы вернулись в главное меню",
             reply_markup=main_menu(),
         )
-    if Mode in (51, 52, 53, 54):
+    if Mode in (
+        51,
+        52,
+        53,
+        54,
+    ):  # 51 - Английский, 52 - Французский, 53 - Китайский, 54 - Арабский
         bot.send_message(message.chat.id, text=translate(Mode, message.text))
-    elif Mode in (31, 32, 33, 34):
+    elif (
+        Mode in (31, 32, 33, 34)
+    ):  # 31 - Джонни Депп, 32 - Дженифер Лоуренс, 33 - Роберт Дауни мл., 34 - Хлоя Грейс Морец
         bot.send_message(message.chat.id, text=dialog(Mode, message.text))
+    elif Mode == 62:  # Тренироваться
+        bot.send_message(message.chat.id, text=testWords(message.text))
     match Mode:
-        case 1:
+        case 1:  # Cлучайный факт
             bot.send_message(
                 message.chat.id,
                 text="Я ищу интересный факт...",
             )
             bot.send_message(message.chat.id, text=fact())
-        case 2:
+        case 2:  # Режим работы с GPT
             bot.send_message(message.chat.id, text=ask(message.text))
-        case 3:
+        case 3:  # Разговор со звездой
             match message.text:
                 case "Джонни Депп":
                     logger.info("Выбран Джонни Депп")
@@ -151,15 +168,17 @@ def actions(message):
                     Mode = 34
                     with open("picturies/Chloë Grace Moretz.jpg", "rb") as img:
                         bot.send_photo(chat_id=message.chat.id, photo=img)
-            if Mode in (31, 32, 33, 34):
+            if (
+                Mode in (31, 32, 33, 34)
+            ):  # 31 - Джонни Депп, 32 - Дженифер Лоуренс, 33 - Роберт Дауни мл., 34 - Хлоя Грейс Морец
                 bot.send_message(
                     message.chat.id,
                     text="Для смены персонажа нажми 'Главное меню'.",
                 )
                 bot.send_message(message.chat.id, startDialog(Mode))
-        case 4:
+        case 4:  # Квиз
             bot.send_message(message.chat.id, text="quiz(message.text)")
-        case 5:
+        case 5:  # Перевод
             match message.text:
                 case "Английский":
                     logger.info("Выбран английский язык")
@@ -173,14 +192,41 @@ def actions(message):
                 case "Арабский":
                     logger.info("Выбран арабский язык")
                     Mode = 54
-            if Mode in (51, 52, 53, 54):
+            if Mode in (
+                51,
+                52,
+                53,
+                54,
+            ):  # 51 - Английский, 52 - Французский, 53 - Китайский, 54 - Арабский
                 bot.send_message(
                     message.chat.id,
                     text="Введи текст, который нужно перевести. Для смены языка нажми 'Главное меню'.",
                 )
-        case 6:
-            bot.send_message(message.chat.id, text="learn(message.text)")
-        case 0:
+        case 6 | 61 | 62:  # Словарный тренажёр
+            match message.text:
+                case "Ещё слово":
+                    logger.info("Запрошено ещё слово")
+                    Mode = 61
+                    bot.send_message(
+                        message.chat.id,
+                        text="Я подыскиваю для тебя интересное слово...",
+                    )
+                    bot.send_message(message.chat.id, text=getWorld())
+                case "Тренироваться":
+                    logger.info("Выбран режим тренировки")
+                    bot.send_message(
+                        message.chat.id,
+                        text="Для тренировки нажимай 'Тренироваться'.",
+                    )
+                    try:
+                        bot.send_message(message.chat.id, text=question())
+                        Mode = 62
+                    except StopIteration:
+                        bot.send_message(
+                            message.chat.id,
+                            text="Тренировка закончилась. " + statistics(),
+                        )
+        case 0:  # Главное меню
             bot.send_message(message.chat.id, text="Выбери, что ты хочешь.")
 
 
