@@ -12,6 +12,6 @@ def ask_gpt(request):
         model="gpt-3.5-turbo",
         messages=request,
         max_tokens=3000,
-        temperature=0.9,
+        temperature=0.8,
     )
     return response.choices[0].message.content.strip()
