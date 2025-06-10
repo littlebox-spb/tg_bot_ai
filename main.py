@@ -3,6 +3,7 @@ import logging
 from config import TG_BOT_KEY
 from handlers.ask import ask
 from handlers.random import fact
+from handlers.star import dialog, startDialog
 from handlers.translate import translate
 from telebot import TeleBot, types
 
@@ -59,6 +60,9 @@ def actions(message):
         Mode = 2
     elif message.text == "✨ Поговорить со звездой":
         logger.info("Разговор со звездой успешно запущен")
+        if Mode != 3:
+            with open("picturies/zvezda.jpg", "rb") as img:
+                bot.send_photo(chat_id=message.chat.id, photo=img)
         Mode = 3
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         btn1 = types.KeyboardButton("Джонни Депп")
@@ -67,7 +71,9 @@ def actions(message):
         btn4 = types.KeyboardButton("Хлоя Грейс Морец")
         back = types.KeyboardButton("Главное меню")
         markup.add(btn1, btn2, btn3, btn4, back)
-        bot.send_message(message.chat.id, text="Выбери персонажа", reply_markup=markup)
+        bot.send_message(
+            message.chat.id, text="Выбери звезду для беседы", reply_markup=markup
+        )
     elif message.text == "🎯 Викторина":
         logger.info("Викторина успешно запущена")
         Mode = 4
@@ -111,7 +117,9 @@ def actions(message):
             reply_markup=main_menu(),
         )
     if Mode in (51, 52, 53, 54):
-        bot.send_message(message.chat.id, text=translate(Mode, message))
+        bot.send_message(message.chat.id, text=translate(Mode, message.text))
+    elif Mode in (31, 32, 33, 34):
+        bot.send_message(message.chat.id, text=dialog(Mode, message.text))
     match Mode:
         case 1:
             bot.send_message(
@@ -122,7 +130,33 @@ def actions(message):
         case 2:
             bot.send_message(message.chat.id, text=ask(message.text))
         case 3:
-            bot.send_message(message.chat.id, text=f"dialog({message.text})")
+            match message.text:
+                case "Джонни Депп":
+                    logger.info("Выбран Джонни Депп")
+                    Mode = 31
+                    with open("picturies/Johnny Depp.jpg", "rb") as img:
+                        bot.send_photo(chat_id=message.chat.id, photo=img)
+                case "Дженифер Лоуренс":
+                    logger.info("Выбрана Дженифер Лоуренс")
+                    Mode = 32
+                    with open("picturies/Jennifer Lawrence.jpg", "rb") as img:
+                        bot.send_photo(chat_id=message.chat.id, photo=img)
+                case "Роберт Дауни мл.":
+                    logger.info("Выбран Роберт Дауни мл.")
+                    Mode = 33
+                    with open("picturies/Robert Downey Jr.jpg", "rb") as img:
+                        bot.send_photo(chat_id=message.chat.id, photo=img)
+                case "Хлоя Грейс Морец":
+                    logger.info("Выбрана Хлоя Грейс Морец")
+                    Mode = 34
+                    with open("picturies/Chloë Grace Moretz.jpg", "rb") as img:
+                        bot.send_photo(chat_id=message.chat.id, photo=img)
+            if Mode in (31, 32, 33, 34):
+                bot.send_message(
+                    message.chat.id,
+                    text="Для смены персонажа нажми 'Главное меню'.",
+                )
+                bot.send_message(message.chat.id, startDialog(Mode))
         case 4:
             bot.send_message(message.chat.id, text="quiz(message.text)")
         case 5:
