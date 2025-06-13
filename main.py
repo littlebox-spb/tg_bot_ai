@@ -5,7 +5,7 @@ from handlers.ask import ask
 from handlers.random import fact
 from handlers.star import dialog, startDialog
 from handlers.translate import translate
-from handlers.trenager import getWorld, question, statistics, testWords
+from handlers.trenager import getWorld, newTrain, question, statistics, testWords
 from telebot import TeleBot, types
 
 bot = TeleBot(TG_BOT_KEY)
@@ -20,12 +20,12 @@ logger = logging.getLogger(__name__)
 def main_menu():
     global Mode
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    btn1 = types.KeyboardButton("🌍 Случайный факт")
-    btn2 = types.KeyboardButton("❓ Задать вопрос чату GPT")
-    btn3 = types.KeyboardButton("✨ Поговорить со звездой")
+    btn1 = types.KeyboardButton("🌍 Факт")
+    btn2 = types.KeyboardButton("❓ чату GPT")
+    btn3 = types.KeyboardButton("✨ Звезда")
     btn4 = types.KeyboardButton("🎯 Викторина")
     btn5 = types.KeyboardButton("📖 Переводчик")
-    btn6 = types.KeyboardButton("📑 Словарный тренажёр английского языка")
+    btn6 = types.KeyboardButton("📑 Тренажёр")
     markup.add(btn1, btn2, btn3, btn4, btn5, btn6)
     Mode = 0
     return markup
@@ -44,7 +44,7 @@ def start(message):
 @bot.message_handler(content_types=["text"])
 def actions(message):
     global Mode
-    if message.text == "🌍 Случайный факт":
+    if message.text == "🌍 Факт":
         logger.info("Случайный факт успешно запущен")
         if Mode != 1:
             bot.send_message(
@@ -54,12 +54,12 @@ def actions(message):
             with open("picturies/random.jpg", "rb") as img:
                 bot.send_photo(chat_id=message.chat.id, photo=img)
         Mode = 1
-    elif message.text == "❓ Задать вопрос чату GPT":
+    elif message.text == "❓ чату GPT":
         logger.info("Режим работы с GPT успешно запущен")
         with open("picturies/gpt.jpg", "rb") as img:
             bot.send_photo(chat_id=message.chat.id, photo=img)
         Mode = 2
-    elif message.text == "✨ Поговорить со звездой":
+    elif message.text == "✨ Звезда":
         logger.info("Разговор со звездой успешно запущен")
         if Mode != 3:
             with open("picturies/zvezda.jpg", "rb") as img:
@@ -97,7 +97,7 @@ def actions(message):
             text="Выбери язык, на который нужно перевести твое сообщение.",
             reply_markup=markup,
         )
-    elif message.text == "📑 Словарный тренажёр английского языка":
+    elif message.text == "📑 Тренажёр":
         logger.info("Словарный тренажёр успешно запущен")
         if Mode != 6:
             with open("picturies/trenager.jpg", "rb") as img:
@@ -222,10 +222,8 @@ def actions(message):
                         bot.send_message(message.chat.id, text=question())
                         Mode = 62
                     except StopIteration:
-                        bot.send_message(
-                            message.chat.id,
-                            text="Тренировка закончилась. " + statistics(),
-                        )
+                        Mode = 61
+                        newTrain()
         case 0:  # Главное меню
             bot.send_message(message.chat.id, text="Выбери, что ты хочешь.")
 
