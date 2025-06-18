@@ -2,10 +2,11 @@ import logging
 
 from config import TG_BOT_KEY
 from handlers.ask import ask
+from handlers.quiz import initQuiz, quizAnswer, startQuiz
 from handlers.random import fact
 from handlers.star import dialog, startDialog
 from handlers.translate import translate
-from handlers.trenager import getWorld, newTrain, question, statistics, testWords
+from handlers.trenager import getWorld, newTrain, question, testWords
 from telebot import TeleBot, types
 
 bot = TeleBot(TG_BOT_KEY)
@@ -77,8 +78,20 @@ def actions(message):
         )
     elif message.text == "🎯 Викторина":
         logger.info("Викторина успешно запущена")
+        if Mode != 4:
+            with open("picturies/quiz.jpg", "rb") as img:
+                bot.send_photo(chat_id=message.chat.id, photo=img)
         Mode = 4
-        bot.send_message(message.chat.id, text="Хорошо, давай начнем викторину!")
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        btn1 = types.KeyboardButton("Физика")
+        btn2 = types.KeyboardButton("Искусство")
+        btn3 = types.KeyboardButton("ИТ")
+        btn4 = types.KeyboardButton("Литература")
+        back = types.KeyboardButton("Главное меню")
+        markup.add(btn1, btn2, btn3, btn4, back)
+        bot.send_message(
+            message.chat.id, text="Выбери тему викторины", reply_markup=markup
+        )
     elif message.text == "📖 Переводчик":
         logger.info("Перевочик успешно запущен")
         if Mode != 5:
@@ -176,8 +189,42 @@ def actions(message):
                     text="Для смены персонажа нажми 'Главное меню'.",
                 )
                 bot.send_message(message.chat.id, startDialog(Mode))
-        case 4:  # Квиз
-            bot.send_message(message.chat.id, text="quiz(message.text)")
+        case 4 | 41 | 42 | 43 | 44:  # Квиз
+            match message.text:
+                case "Физика":
+                    logger.info("Выбран тема Физика")
+                    Mode = 41
+                    with open("picturies/fizika.jpg", "rb") as img:
+                        bot.send_photo(chat_id=message.chat.id, photo=img)
+                case "Искусство":
+                    logger.info("Выбрана тема Искусство")
+                    Mode = 42
+                    with open("picturies/iskusstvo.jpg", "rb") as img:
+                        bot.send_photo(chat_id=message.chat.id, photo=img)
+                case "ИТ":
+                    logger.info("Выбран тема ИТ.")
+                    Mode = 43
+                    with open("picturies/it.jpg", "rb") as img:
+                        bot.send_photo(chat_id=message.chat.id, photo=img)
+                case "Литература":
+                    logger.info("Выбрана тема Литература")
+                    Mode = 44
+                    with open("picturies/literature.jpg", "rb") as img:
+                        bot.send_photo(chat_id=message.chat.id, photo=img)
+            if Mode in (
+                41,
+                42,
+                43,
+                44,
+            ):  # 41 - Физика, 42 - Искусство, 43 - ИТ, 44 - Литература
+                bot.send_message(
+                    message.chat.id,
+                    text="Для смены темы викторины нажми 'Главное меню'.",
+                )
+                bot.send_message(message.chat.id, quizAnswer(Mode, message.text))
+                bot.send_message(message.chat.id, startQuiz(Mode))
+            else:
+                initQuiz()
         case 5:  # Перевод
             match message.text:
                 case "Английский":
@@ -226,6 +273,7 @@ def actions(message):
                         newTrain()
         case 0:  # Главное меню
             bot.send_message(message.chat.id, text="Выбери, что ты хочешь.")
+            initQuiz()
 
 
 def main():
