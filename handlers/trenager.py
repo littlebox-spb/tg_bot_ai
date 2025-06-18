@@ -42,10 +42,6 @@ def newTrain():
     success = 0
 
 
-def statistics():
-    return f"Вы успешно ответили на {success} вопросов из {len(words)}."
-
-
 def wordsGeneration():
     for word in words:
         yield word
@@ -84,5 +80,5 @@ def testWords(prompt):
     try:
         return question()
     except Exception as e:
-        logger.error(f"Список слов пуст.")
-        return "Тренировка закончилась. " + statistics()
+        logger.error(f"Список слов пуст. {e}")
+        return f"Тренировка закончилась. Вы успешно ответили на {success} вопросов из {len(words)}."
