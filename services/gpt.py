@@ -1,10 +1,8 @@
 import httpx as httpx
-from config import GPT_API_KEY
+from config import GPT_API_KEY, PROXY_URL
 from openai import OpenAI
 
-client = OpenAI(
-    http_client=httpx.Client(proxy="http://18.199.183.77:49232"), api_key=GPT_API_KEY
-)
+client = OpenAI(http_client=httpx.Client(proxy=PROXY_URL), api_key=GPT_API_KEY)
 
 
 def ask_gpt(request):

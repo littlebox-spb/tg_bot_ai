@@ -1,13 +1,20 @@
-import services.gpt as gpt
-import logging
+"""Модуль для режима вопросов чату GPT"""
 
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-)
-logger = logging.getLogger(__name__)
+import services.gpt as gpt
+from services.logger import logger
 
 
 def ask(prompt):
+    """
+    Sends a question to the GPT service and returns the response.
+
+    Args:
+        prompt (str): The user's question to be sent to the GPT service.
+
+    Returns:
+        str: The response from the GPT service, or an error message if the request fails.
+    """
+
     request = [
         {
             "role": "system",
