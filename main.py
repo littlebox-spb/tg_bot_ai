@@ -222,6 +222,7 @@ def actions(message):
                     text="Для смены темы викторины нажми 'Главное меню'.",
                 )
                 bot.send_message(message.chat.id, quizAnswer(Mode, message.text))
+                bot.send_message(message.chat.id, text="Готовлю вопрос к викторине...")
                 bot.send_message(message.chat.id, startQuiz(Mode))
             else:
                 initQuiz()
