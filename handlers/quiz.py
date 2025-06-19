@@ -40,6 +40,7 @@ def startQuiz(mode):
             response = gpt.ask_gpt(request)
             logger.info("Вопрос викторины успешно получен")
             answerList = [a for a in response.split("\n") if len(a) > 4]
+            answerList = [a[2:].strip() for a in answerList[1:]]
             return response
         except Exception as e:
             logger.error(f"Ошибка при получении вопроса от OpenAI: {e}")
