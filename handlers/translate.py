@@ -1,21 +1,32 @@
-import logging
+"""Модуль для режима переводов"""
 
 import services.gpt as gpt
+from services.logger import logger
 
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-)
-logger = logging.getLogger(__name__)
+INDEX_SHIFT = 51
 
 
 def translate(Mode, message):
+    """
+    Translates a given message to a language specified by Mode.
+
+    Args:
+        Mode (int): The mode of the translation. Must be in the range from 51 to 54.
+        message (str): The message to be translated.
+
+    Returns:
+        str: The translation of the message from the GPT service, or an error message if the request fails.
+
+    Raises:
+        Exception: If the request to the GPT service fails.
+    """
     logger.info("Переводчик GPT успешно запущен")
     language = ["английский", "французский", "китайский", "арабский"]
     request = [
         {"role": "system", "content": "Ты переводчик - полиглот."},
         {
             "role": "user",
-            "content": f'Переведи "{message}" на {language[Mode - 51]} язык.',
+            "content": f'Переведи "{message}" на {language[Mode - INDEX_SHIFT]} язык.',
         },
     ]
     logger.info("Запрос успешно сформирован")

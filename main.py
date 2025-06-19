@@ -1,5 +1,6 @@
-import logging
+"""Главный модуль бота"""
 
+import mode
 from config import TG_BOT_KEY
 from handlers.ask import ask
 from handlers.quiz import initQuiz, quizAnswer, startQuiz
@@ -7,18 +8,20 @@ from handlers.random import fact
 from handlers.star import dialog, startDialog
 from handlers.translate import translate
 from handlers.trenager import getWorld, newTrain, question, testWords
+from services.logger import logger
 from telebot import TeleBot, types
 
 bot = TeleBot(TG_BOT_KEY)
-Mode = 0  # Режим главного меню
-
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-)
-logger = logging.getLogger(__name__)
+Mode = mode.MAIN_MENU
 
 
 def main_menu():
+    """
+    Generate main menu markup.
+
+    Returns:
+        markup (types.ReplyKeyboardMarkup): Reply markup with main menu buttons.
+    """
     global Mode
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     btn1 = types.KeyboardButton("🌍 Факт")
@@ -34,6 +37,11 @@ def main_menu():
 
 @bot.message_handler(commands=["start"])
 def start(message):
+    """
+    Handles the /start command.
+
+    Sends a greeting message to the user with main menu markup.
+    """
     bot.send_message(
         message.chat.id,
         text="Привет! Я бот и я могу развлечь тебя. Выбери, что ты хочешь.",
@@ -44,28 +52,36 @@ def start(message):
 
 @bot.message_handler(content_types=["text"])
 def actions(message):
+    """
+    Handles text messages from users.
+
+    If the message is a command, it calls the corresponding function.
+    If the message is a text, it sends the text to the corresponding mode
+    (e.g. random fact, quiz, dialog with celebrity, etc.).
+    """
     global Mode
     if message.text == "🌍 Факт":
         logger.info("Случайный факт успешно запущен")
-        if Mode != 1:
+        if Mode != mode.RANDOM:
             bot.send_message(
                 message.chat.id,
                 text="Хорошо, я сейчас подыщу тебе, что-нибудь интересное!",
             )
             with open("picturies/random.jpg", "rb") as img:
                 bot.send_photo(chat_id=message.chat.id, photo=img)
-        Mode = 1
+        Mode = mode.RANDOM
     elif message.text == "❓ чату GPT":
         logger.info("Режим работы с GPT успешно запущен")
         with open("picturies/gpt.jpg", "rb") as img:
             bot.send_photo(chat_id=message.chat.id, photo=img)
-        Mode = 2
+        Mode = mode.QUESTIONS
+        message.text = "Можно задать тебе вопрос?"
     elif message.text == "✨ Звезда":
         logger.info("Разговор со звездой успешно запущен")
-        if Mode != 3:
+        if Mode != mode.DIALOG:
             with open("picturies/zvezda.jpg", "rb") as img:
                 bot.send_photo(chat_id=message.chat.id, photo=img)
-        Mode = 3
+        Mode = mode.DIALOG
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         btn1 = types.KeyboardButton("Джонни Депп")
         btn2 = types.KeyboardButton("Дженифер Лоуренс")
@@ -78,10 +94,10 @@ def actions(message):
         )
     elif message.text == "🎯 Викторина":
         logger.info("Викторина успешно запущена")
-        if Mode != 4:
+        if Mode != mode.QUIZ:
             with open("picturies/quiz.jpg", "rb") as img:
                 bot.send_photo(chat_id=message.chat.id, photo=img)
-        Mode = 4
+        Mode = mode.QUIZ
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         btn1 = types.KeyboardButton("Физика")
         btn2 = types.KeyboardButton("Искусство")
@@ -94,10 +110,10 @@ def actions(message):
         )
     elif message.text == "📖 Переводчик":
         logger.info("Перевочик успешно запущен")
-        if Mode != 5:
+        if Mode != mode.TRANSLATE:
             with open("picturies/translate.jpg", "rb") as img:
                 bot.send_photo(chat_id=message.chat.id, photo=img)
-        Mode = 5
+        Mode = mode.TRANSLATE
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         btn1 = types.KeyboardButton("Английский")
         btn2 = types.KeyboardButton("Французский")
@@ -112,10 +128,10 @@ def actions(message):
         )
     elif message.text == "📑 Тренажёр":
         logger.info("Словарный тренажёр успешно запущен")
-        if Mode != 6:
+        if Mode != mode.TRAIN:
             with open("picturies/trenager.jpg", "rb") as img:
                 bot.send_photo(chat_id=message.chat.id, photo=img)
-        Mode = 6
+        Mode = mode.TRAIN
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         btn1 = types.KeyboardButton("Ещё слово")
         btn2 = types.KeyboardButton("Тренироваться")
@@ -137,86 +153,72 @@ def actions(message):
             text="Вы вернулись в главное меню",
             reply_markup=main_menu(),
         )
-    if Mode in (
-        51,
-        52,
-        53,
-        54,
-    ):  # 51 - Английский, 52 - Французский, 53 - Китайский, 54 - Арабский
+    if Mode in (mode.ENGLISH, mode.FRENCH, mode.CHINESE, mode.ARABIC):
         bot.send_message(message.chat.id, text=translate(Mode, message.text))
-    elif (
-        Mode in (31, 32, 33, 34)
-    ):  # 31 - Джонни Депп, 32 - Дженифер Лоуренс, 33 - Роберт Дауни мл., 34 - Хлоя Грейс Морец
+    elif Mode in (mode.DJONNY, mode.DJENIFER, mode.ROBERT, mode.HLOYA):
         bot.send_message(message.chat.id, text=dialog(Mode, message.text))
-    elif Mode == 62:  # Тренироваться
+    elif Mode == mode.TRENAGER:
         bot.send_message(message.chat.id, text=testWords(message.text))
     match Mode:
-        case 1:  # Cлучайный факт
+        case mode.RANDOM:
             bot.send_message(
                 message.chat.id,
                 text="Я ищу интересный факт...",
             )
             bot.send_message(message.chat.id, text=fact())
-        case 2:  # Режим работы с GPT
+        case mode.QUESTIONS:
             bot.send_message(message.chat.id, text=ask(message.text))
-        case 3:  # Разговор со звездой
+        case mode.DIALOG:
             match message.text:
                 case "Джонни Депп":
                     logger.info("Выбран Джонни Депп")
-                    Mode = 31
-                    with open("picturies/Johnny Depp.jpg", "rb") as img:
+                    Mode = mode.DJONNY
+                    with open("picturies/Johnny_Depp.jpg", "rb") as img:
                         bot.send_photo(chat_id=message.chat.id, photo=img)
                 case "Дженифер Лоуренс":
                     logger.info("Выбрана Дженифер Лоуренс")
-                    Mode = 32
-                    with open("picturies/Jennifer Lawrence.jpg", "rb") as img:
+                    Mode = mode.DJENIFER
+                    with open("picturies/Jennifer_Lawrence.jpg", "rb") as img:
                         bot.send_photo(chat_id=message.chat.id, photo=img)
                 case "Роберт Дауни мл.":
                     logger.info("Выбран Роберт Дауни мл.")
-                    Mode = 33
-                    with open("picturies/Robert Downey Jr.jpg", "rb") as img:
+                    Mode = mode.ROBERT
+                    with open("picturies/Robert_Downey_Jr.jpg", "rb") as img:
                         bot.send_photo(chat_id=message.chat.id, photo=img)
                 case "Хлоя Грейс Морец":
                     logger.info("Выбрана Хлоя Грейс Морец")
-                    Mode = 34
-                    with open("picturies/Chloë Grace Moretz.jpg", "rb") as img:
+                    Mode = mode.HLOYA
+                    with open("picturies/Chloë_Grace_Moretz.jpg", "rb") as img:
                         bot.send_photo(chat_id=message.chat.id, photo=img)
-            if (
-                Mode in (31, 32, 33, 34)
-            ):  # 31 - Джонни Депп, 32 - Дженифер Лоуренс, 33 - Роберт Дауни мл., 34 - Хлоя Грейс Морец
+            if Mode in (mode.DJONNY, mode.DJENIFER, mode.ROBERT, mode.HLOYA):
                 bot.send_message(
                     message.chat.id,
                     text="Для смены персонажа нажми 'Главное меню'.",
                 )
                 bot.send_message(message.chat.id, startDialog(Mode))
-        case 4 | 41 | 42 | 43 | 44:  # Квиз
+        case mode.QUIZ | mode.PHISICS | mode.ART | mode.IT | mode.LITERATURE:
             match message.text:
                 case "Физика":
                     logger.info("Выбран тема Физика")
-                    Mode = 41
+                    Mode = mode.PHISICS
                     with open("picturies/fizika.jpg", "rb") as img:
                         bot.send_photo(chat_id=message.chat.id, photo=img)
                 case "Искусство":
                     logger.info("Выбрана тема Искусство")
-                    Mode = 42
+                    Mode = mode.ART
                     with open("picturies/iskusstvo.jpg", "rb") as img:
                         bot.send_photo(chat_id=message.chat.id, photo=img)
                 case "ИТ":
                     logger.info("Выбран тема ИТ.")
-                    Mode = 43
+                    Mode = mode.IT
                     with open("picturies/it.jpg", "rb") as img:
                         bot.send_photo(chat_id=message.chat.id, photo=img)
                 case "Литература":
                     logger.info("Выбрана тема Литература")
-                    Mode = 44
+                    Mode = mode.LITERATURE
                     with open("picturies/literature.jpg", "rb") as img:
                         bot.send_photo(chat_id=message.chat.id, photo=img)
-            if Mode in (
-                41,
-                42,
-                43,
-                44,
-            ):  # 41 - Физика, 42 - Искусство, 43 - ИТ, 44 - Литература
+            if Mode in (mode.PHISICS, mode.ART, mode.IT, mode.LITERATURE):
                 bot.send_message(
                     message.chat.id,
                     text="Для смены темы викторины нажми 'Главное меню'.",
@@ -226,35 +228,30 @@ def actions(message):
                 bot.send_message(message.chat.id, startQuiz(Mode))
             else:
                 initQuiz()
-        case 5:  # Перевод
+        case mode.TRANSLATE:
             match message.text:
                 case "Английский":
                     logger.info("Выбран английский язык")
-                    Mode = 51
+                    Mode = mode.ENGLISH
                 case "Французский":
                     logger.info("Выбран французский язык")
-                    Mode = 52
+                    Mode = mode.FRENCH
                 case "Китайский":
                     logger.info("Выбран китайский язык")
-                    Mode = 53
+                    Mode = mode.CHINESE
                 case "Арабский":
                     logger.info("Выбран арабский язык")
-                    Mode = 54
-            if Mode in (
-                51,
-                52,
-                53,
-                54,
-            ):  # 51 - Английский, 52 - Французский, 53 - Китайский, 54 - Арабский
+                    Mode = mode.ARABIC
+            if Mode in (mode.ENGLISH, mode.FRENCH, mode.CHINESE, mode.ARABIC):
                 bot.send_message(
                     message.chat.id,
                     text="Введи текст, который нужно перевести. Для смены языка нажми 'Главное меню'.",
                 )
-        case 6 | 61 | 62:  # Словарный тренажёр
+        case mode.TRAIN | mode.WORLD | mode.TRENAGER:
             match message.text:
                 case "Ещё слово":
                     logger.info("Запрошено ещё слово")
-                    Mode = 61
+                    Mode = mode.WORLD
                     bot.send_message(
                         message.chat.id,
                         text="Я подыскиваю для тебя интересное слово...",
@@ -268,16 +265,24 @@ def actions(message):
                     )
                     try:
                         bot.send_message(message.chat.id, text=question())
-                        Mode = 62
+                        Mode = mode.TRENAGER
                     except StopIteration:
-                        Mode = 61
+                        Mode = mode.WORLD
                         newTrain()
-        case 0:  # Главное меню
+        case mode.MAIN_MENU:
             bot.send_message(message.chat.id, text="Выбери, что ты хочешь.")
             initQuiz()
 
 
 def main():
+    """
+    The main function to start the Telegram bot.
+
+    This function initializes and starts the bot's infinite polling loop,
+    listening for incoming messages and handling them accordingly. If an
+    exception occurs during polling, it logs the error message.
+    """
+
     try:
         bot.infinity_polling()
     except Exception as e:

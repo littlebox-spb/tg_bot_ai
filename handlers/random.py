@@ -1,17 +1,20 @@
-import services.gpt as gpt
-import logging
+"""Модуль для режима случайных фактов"""
 
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-)
-logger = logging.getLogger(__name__)
+import services.gpt as gpt
+from services.logger import logger
 
 
 def fact():
-    with open("prompt/random.system.txt", "r", encoding="utf-8") as f:
+    """
+    Gets a random fact from the GPT service.
+
+    Returns:
+        str: The response from the GPT service, or an error message if the request fails.
+    """
+    with open("prompt/random_system.txt", "r", encoding="utf-8") as f:
         prompt_system = f.read()
         logger.info("System промпт успешно загружен")
-    with open("prompt/random.user.txt", "r", encoding="utf-8") as f:
+    with open("prompt/random_user.txt", "r", encoding="utf-8") as f:
         prompt = f.read()
         logger.info("Промпт успешно загружен")
     request = [
